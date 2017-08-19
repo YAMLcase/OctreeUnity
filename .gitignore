@@ -1,0 +1,18 @@
+# Ignore everything.  We'll whitelist what we want to pull in.
+/*
+/*/
+
+# Git meta files
+!.gitignore
+!.gitattributes
+!README.md
+
+# Whitelisted directories/files
+!/ProjectSettings/
+!/Assets/
+/Assets/*
+!/Assets/_core/
+!/Assets/_modules/
+
+# Any modules kept in their own git repo.  Perhaps one day submodules will be a better solution.
+#Assets/_modules/fps/
