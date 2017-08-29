@@ -16,7 +16,7 @@ public class OctreeNode
         {
             if(_octreeRoot == null)
             {
-                _octreeRoot = new OctreeNode(null, Vector3.zero, rootRadius, new List<OctreeItem>());
+                _octreeRoot = new OctreeNode(null, new Vector3(0f, 0f, 0f), rootRadius, new List<OctreeItem>());
             }
             return _octreeRoot;
         }
@@ -33,6 +33,9 @@ public class OctreeNode
     public List<OctreeItem> containedItems = new List<OctreeItem>(); //keeps track of the little cubes contained in this node
 
     OctreeNode[] _childrenNodes = new OctreeNode[8]; //will be available to store links to any future children (always 8)
+
+    GameObject PosText;
+
     public OctreeNode[] childrenNodes
     {
         get { return _childrenNodes; }
@@ -43,14 +46,6 @@ public class OctreeNode
         _childrenNodes = new OctreeNode[8];
     }
 
-    //[RuntimeInitializeOnLoadMethod]  //ran immediately after unity starts and creates a root (the first instance of this
-                                     //octreenode class)
-
-    //static bool Init()
-    //{
-    //    return octreeRoot == null;
-    //}
-
     //constructor
     public OctreeNode(OctreeNode parent, Vector3 thisChild_pos, float thisChild_halfLength, List<OctreeItem> potential_items)
     {
@@ -58,10 +53,19 @@ public class OctreeNode
                                                     //constructor when creating child)
         halfDimentionLength = thisChild_halfLength; //how far from center of this node to its alls?
         pos = thisChild_pos;                        //the coordinates of the center of this new node
+        //Debug.Log(pos.ToString());
+        //GameObject newTestThing = (GameObject)GameObject.Instantiate(Resources.Load("TestThing"));
+        //newTestThing.transform.position = pos;
+
 
         octantGO = new GameObject();
         octantGO.hideFlags = HideFlags.HideInHierarchy;
         octantLineRenderer = octantGO.AddComponent<LineRenderer>();
+
+        //PosText = (GameObject)GameObject.Instantiate(Resources.Load("TextMesh"));
+        //PosText.transform.position = pos;
+        //PosText.GetComponent<TextMesh>().text = pos.ToString();
+
 
         FillCube_VisualizeCoords(); //fill the coordinates for the line renderer
 
@@ -109,14 +113,25 @@ public class OctreeNode
 
         if(containedItems.Count > maxObjectLimit)
         {
-            Split();
+            oldSplit();
         }
     }
 
     private void Split()
     {
+        foreach(OctreeItem oi in containedItems)
+        {
+            oi.my_ownerNodes.Remove(this);
+        }
+
+        
+    }
+
+    private void oldSplit()
+    {
         foreach(OctreeItem oi in containedItems) //for every item which was contained in this splitting node:
         {
+
             oi.my_ownerNodes.Remove(this);       //make the item forget about THIS NODE (since it has to split into smaller
                                                  //children)
         }
@@ -128,7 +143,15 @@ public class OctreeNode
         for (int i = 0; i < 4; i++)
         {
             _childrenNodes[i] = new OctreeNode(this, pos + positionVector, halfDimentionLength / 2, containedItems);
+
+            GameObject NodeObjCounter = (GameObject)GameObject.Instantiate(Resources.Load("TextMesh"));
+            NodeObjCounter.transform.position = positionVector;
+            NodeObjCounter.GetComponent<TextMesh>().text = Mover.nodeCount.ToString();
+            Mover.nodeCount++;
+
             positionVector = Quaternion.Euler(0f, -90f, 0f) * positionVector;
+
+
         }
 
         //point the vector to the BOTTOM RIGHT future's child center
@@ -138,11 +161,17 @@ public class OctreeNode
         {
             _childrenNodes[i] = new OctreeNode(this, pos + positionVector, halfDimentionLength / 2, containedItems);
 
+            GameObject NodeObjCounter = (GameObject)GameObject.Instantiate(Resources.Load("TextMesh"));
+            NodeObjCounter.transform.position = positionVector;
+            NodeObjCounter.GetComponent<TextMesh>().text = Mover.nodeCount.ToString();
+            Mover.nodeCount++;
+
             //rotate the vector around the world's top axis, by negative 90 degrees (counter clock-wise if looking from above). 
             //NOTE THAT WE ROTATE  the placement vector as if it was originating from world zero (since it is actually at the 
             //world's origin.  only after it's rotated do we displace it to the correct position with the pos vector with a 
             //child's constructor.
             positionVector = Quaternion.Euler(0f, -90f, 0f) * positionVector;
+
         }
 
         containedItems.Clear();
@@ -171,14 +200,18 @@ public class OctreeNode
     {
         foreach (OctreeItem oi in containedItems) //for every item in this (about to be deleted) obsolete node, do:
         {
-            //from such item's owner node extract a list excluding all the siblings of this obsolete node.  Then re-assign such list to the owner nodes of that item.
+            //from such item's owner node extract a list excluding all the siblings of this obsolete node.  Then re-assign 
+            //such list to the owner nodes of that item.
             oi.my_ownerNodes = oi.my_ownerNodes.Except(obsoleteSiblingNodes).ToList(); 
             oi.my_ownerNodes.Remove(this); //and remove this node as well, after removing its 7 siblings.
             oi.my_ownerNodes.Add(parent);
             parent.containedItems.Add(oi);
+            
+            
            
         }
-            GameObject.Destroy(octantGO);  //"woops! make sure you delete the octantGO of every sibling node too"
+        GameObject.Destroy(octantGO);  //"woops! make sure you delete the octantGO of every sibling node too"
+        GameObject.Destroy(PosText);
     }
 
     //true if the children nodes are present in siblings of THIS PARTICULAR OBSOLETE NODE or if their total number of items is 

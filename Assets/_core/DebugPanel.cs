@@ -39,13 +39,5 @@ public class DebugPanel : MonoBehaviour {
 
             GUI.Label(new Rect(10, debugPos, 500, 20), o.transform.position.ToString());
         }
-
-        OctreeNode[] childrens = RootInit.OctreeRoot.childrenNodes;
-        foreach (OctreeNode o in childrens)
-        {
-            debugPos += 20;
-
-            GUI.Label(new Rect(10, debugPos, 500, 20), o.containedItems.ToString());
-        }
     }
 }
