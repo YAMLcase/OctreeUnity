@@ -183,7 +183,15 @@ public class OctreeNode
         {
             foreach (OctreeNode on in parent.childrenNodes) //iterate through this node and its 7 siblings.  Then kills them
             {
-                on.KillNode(parent.childrenNodes.Where(i => !ReferenceEquals(i, this)).ToArray());
+                //Debug.Log("on.pos in p.cn: " + on.pos.ToString());
+                //on.KillNode(parent.childrenNodes.Where(i => !ReferenceEquals(i, this)).ToArray());
+                OctreeNode[] arr = parent.childrenNodes.Where(i => !ReferenceEquals(i, this)).ToArray();
+                foreach (OctreeNode i in arr)
+                {
+                    Debug.Log("currently iterating node: " + on.pos.ToString() + "   this node's sibling: " + i.pos.ToString());
+                }
+                on.KillNode(arr);
+
             }
             parent.EraseChildrenNodes();
         }
